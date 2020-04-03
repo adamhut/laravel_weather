@@ -7,15 +7,17 @@
             <div class="current-weather flex items-center justify-between px-6 py-8">
                 <div class="flex items-center">
                     <div>
-                        <div class="text-6xl font-semibold">8C</div>
-                        <div>feels like 2c</div>
+                        <div class="text-6xl font-semibold">{{currentTemperature.actual}} F</div>
+                        <div>feels like {{currentTemperature.feels}} F</div>
                     </div>
                     <div class="mx-5">
-                        <div class="font-semibold">Cloudly</div>
+                        <div class="font-semibold">{{currentTemperature.summary}}</div>
                         <div>Hacienda Height, CA</div>
                     </div>
                 </div>
-                <div>ICON</div>
+                <div>
+                    <img :src="currentTemperature.icon" alt="" v-if="currentTemperature.icon">
+                </div>
             </div>  
             <!--end of current weather -->
             <div class="future-weather text-sm bg-gray-800 px-6 py-8">
@@ -63,9 +65,56 @@
     export default {
         data() {
             return {
-                weather: {}
+                currentTemperature:{
+                    actual:'',
+                    feels:'',
+                    summary:'',
+                    icon:'',
+                },
+                location: {
+                    name:'Hacienda Heights,CA',
+                    lat:'33.9850',
+                    lon:'-117.9588'
+                }
             }
         },
+        mounted() {
+            this.fetchData();
+        },
+        computed: {
+            
+        },
+        methods: {
+            fetchData() {
+
+                // fetch(`https://cors-anywhere.herokuapp.com/https://api.openweathermap.org/data/2.5/forecast?q=91745,us&APPID=81ebaeff11833779a95fd32426f34f35`)
+                //     .then(response=>{
+                //         return response.json();
+                //     })
+                //     .then(data=>{
+                //         console.log(data);
+                //     })
+                fetch(`http://lara-weather.test/api/weather?lat=${this.location.lat}&log=${this.location.lon}`)
+                    .then(response=>{
+                        return response.json();
+                    })
+                    .then(data=>{
+                        console.log(data);
+                        this.currentTemperature.actual= Math.round(data.main.temp);
+                        this.currentTemperature.feels = Math.round(data.main.feels_like);
+                        this.currentTemperature.summary = data.weather[0].main;
+                        this.currentTemperature.icon = this.iconUrl(data.weather[0].icon);
+                        
+
+                    })
+
+            },
+            iconUrl(icon){
+                console.log(icon);
+                return `http://openweathermap.org/img/wn/${icon}@2x.png`
+            }
+        },
+
 
     }
 
