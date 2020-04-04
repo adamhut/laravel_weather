@@ -1,7 +1,9 @@
 <template>
-    <div class="mb-8 text-white ">
-        <div class="places-input text">
-            <input type="text" class="w-full">
+    <div class="mb-8 text-white">
+        <div class="places-input text-gray-700">
+            <input type="search" id="address" class="w-full" placeholder="Where are we going?" />
+
+            <p>Selected: <strong id="address-value">none</strong></p>
         </div><!-- end of places input-->
         <div class="weather-container mt-4 font-sans w-128 max-w-lg overflow-hidden bg-gray-900 shadow-lg rounded-lg">
             <div class="current-weather flex items-center justify-between px-6 py-8">
@@ -21,40 +23,23 @@
             </div>  
             <!--end of current weather -->
             <div class="future-weather text-sm bg-gray-800 px-6 py-8">
-                <div class="flex items-center">
-                    <div class="w-1/6 text-lg text-gray-200">Mon</div>
+                <div v-for="(list,index) in daily" 
+                    :key="list.dt" 
+                    class="flex items-center "
+                    :class="{'mt-6':index > 0}"
+                >
+                    <div class="w-1/6 text-lg text-gray-200">{{ toDayOfWeek(list.dt)}}</div>
                     <div class="w-4/6 px-4 flex items-center ">
-                        <div>icon</div>
-                        <div class="ml-3">Clould with a chance of showers</div>
+                        <div>
+                             <img class="w-16" :src="iconUrl(list.weather[0].icon)" :alt="list.weather[0].description"/>
+                        </div>
+                        <div class="ml-3">{{list.weather[0].description}}</div>
                     </div> 
                     <div class="w-1/6 text-right">
-                        <div>5 C</div>
-                        <div>-2 C</div>
+                        <div class="leading-6">{{Math.round(list.temp.max)}} F</div>
+                        <div class="leading-6">{{Math.round(list.temp.min)}} F</div>
                     </div>
                 </div>
-                <div class="mt-8 flex items-center ">
-                    <div class="w-1/6 text-lg text-gray-200">Mon</div>
-                    <div class="w-4/6 px-4 flex items-center ">
-                        <div>icon</div>
-                        <div class="ml-3">Clould with a chance of showers</div>
-                    </div> 
-                    <div class="w-1/6 text-right">
-                        <div>5 C</div>
-                        <div>-2 C</div>
-                    </div>
-                </div>
-                <div class="mt-8 flex items-center ">
-                    <div class="w-1/6 text-lg text-gray-200">Mon</div>
-                    <div class="w-4/6 px-4 flex items-center ">
-                        <div>icon</div>
-                        <div class="ml-3">Clould with a chance of showers</div>
-                    </div> 
-                    <div class="w-1/6 text-right">
-                        <div>5 C</div>
-                        <div>-2 C</div>
-                    </div>
-                </div>
-
             </div><!--end of future weather -->
         </div>
         <!--end of weather container-->
@@ -71,6 +56,7 @@
                     summary:'',
                     icon:'',
                 },
+                daily:null,
                 location: {
                     name:'Hacienda Heights,CA',
                     lat:'33.9850',
@@ -80,11 +66,46 @@
         },
         mounted() {
             this.fetchData();
+
+            var placesAutocomplete = places({
+                appId: 'plDC3LI1GWBD',
+                apiKey: '8fcc0fc0b5ddda6a10d3dd5326db186d',
+                container: document.querySelector('#address')
+            }).configure({
+                type: 'city',
+                aroundLatLngViaIP: false,
+            });
+
+            var $address = document.querySelector('#address-value')
+            
+            placesAutocomplete.on('change', (e)=>{
+                console.log(e.suggestion);
+                $address.textContent = e.suggestion.value
+
+                this.location.name = `${e.suggestion.name},${e.suggestion.country}`;
+                this.location.lat = `${e.suggestion.latlng.lat}`;
+                this.location.lon = `${e.suggestion.latlng.lng}`;
+
+            });
+
+            placesAutocomplete.on('clear', function() {
+                $address.textContent = 'none';
+            });
+        },
+        watch:{
+            location:{
+                handler(newValue,oldValue){
+                    this.fetchData()
+                },
+                deep:true
+            }
         },
         computed: {
             
         },
         methods: {
+            
+
             fetchData() {
 
                 // fetch(`https://cors-anywhere.herokuapp.com/https://api.openweathermap.org/data/2.5/forecast?q=91745,us&APPID=81ebaeff11833779a95fd32426f34f35`)
@@ -99,23 +120,49 @@
                         return response.json();
                     })
                     .then(data=>{
-                        console.log(data);
                         this.currentTemperature.actual= Math.round(data.main.temp);
                         this.currentTemperature.feels = Math.round(data.main.feels_like);
                         this.currentTemperature.summary = data.weather[0].main;
                         this.currentTemperature.icon = this.iconUrl(data.weather[0].icon);
-                        
+                    });
+                fetch(`http://lara-weather.test/api/forcast?lat=${this.location.lat}&log=${this.location.lon}`)
+                    .then(response=>{
+                        return response.json();
+                    })
+                    .then(data=>{
+                        console.log(data);
+                        this.daily =data.list;
+                        //this.$nextTick(()=>{
 
+                        //})
+                       
                     })
 
             },
             iconUrl(icon){
-                console.log(icon);
                 return `http://openweathermap.org/img/wn/${icon}@2x.png`
+            },
+            toKebabCase(stringToConvert){
+                return stringToConvert.split(' ').join('-');
+
+            },
+            toDayOfWeek(timestamp){
+                const newDate = new Date(timestamp *1000);
+                const days=['SUN',"MON","TUE","WED","THR","FRI","SAT"];
+
+                return days[newDate.getDay()];
+
+                
+
             }
+
         },
 
 
     }
 
 </script>
+
+<style>
+
+</style>

@@ -12,6 +12,7 @@
 
     <!-- Styles -->
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/places.js@1.18.1"></script>
 </head>
 <body class="bg-blue-200 h-screen antialiased leading-none">
     <div id="app" class="flex justify-center py-16 ">

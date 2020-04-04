@@ -6,11 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
-class WeatherController extends Controller
+class WeatherForcastController extends Controller
 {
-    const BASE_URL= "https://api.openweathermap.org/data/2.5/forecast?";
-
-    
     /**
      * Display a listing of the resource.
      *
@@ -18,25 +15,22 @@ class WeatherController extends Controller
      */
     public function index()
     {
-      
-
+        
+        
         // $apiUrl= "APPID=".config('services.openweathermap.key');
 
         // $resposne = Http::get(self::BASE_URL)
         //     .json()
-        // $response = Http::get("https://api.openweathermap.org/data/2.5/forecast?lat={$lat}&lon={$lon}&APPID={$apiKey}&units=imperial&cnt=5")
-        //     ->json();
-        
 
-        $response = Cache::remember('weather', now()->addMinutes(5), function () {
-            
+        // Cache::forget('forcast');
+        $response =Cache::remember('forcast', now()->addMinutes(5), function () {
+
             $apiKey = config('services.openweathermap.key');
             $lat  = request('lat', '33.9850');
             $lon  = request('lon', '-117.9588');
 
-            return  Http::get("https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lon}&APPID={$apiKey}&units=imperial")
+            return  Http::get("https://api.openweathermap.org/data/2.5/forecast/daily?lat={$lat}&lon={$lon}&APPID={$apiKey}&units=imperial&cnt=5")
                 ->json();
-
         });
 
         return $response;
